@@ -1,9 +1,10 @@
 #include <stdio.h>
 int main() {
    // printf() displays the string inside quotation
-   printf("Hello, World!");
+
    return 0;
 }
-void print(int num){
-    printf("%d",num);
+ void print(){
+    printf("hello");
+    printf("%d",100);
 }
