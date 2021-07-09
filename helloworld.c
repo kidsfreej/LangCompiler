@@ -1,13 +1,12 @@
 #include <stdio.h>
-extern void epic();
+extern void epic(int a,int b,int c,int d);
 int main() {
    // printf() displays the string inside quotation
 
-   epic();
-   printf("hola");
+   epic(4,0,5,11);
    return 0;
 }
- void print(){
-    printf("hello");
-    printf("%d",100);
+ void print(int a){
+    printf("%d\n",a);
 }
+
