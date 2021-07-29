@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "stdlib.h": "c",
+        "xlocale": "c",
+        "xstring": "c",
+        "initializer_list": "c",
+        "type_traits": "c",
+        "xutility": "c",
+        "string.h": "c"
+    }
+}

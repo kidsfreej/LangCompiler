@@ -1,0 +1,24 @@
+
+
+
+push:
+sub esp, 4
+mov DWORD[esp],thing you pushed
+
+pop:
+mov place, DWORD[esp]
+add esp, 4
+
+
+ret:
+ pop   gs:preallocated_tls_slot 
+ jmp   gs:preallocated_tls_slot
+
+
+call:
+push ret_address
+jmp location
+
+leave:
+mov   esp, ebp  
+pop   ebp
