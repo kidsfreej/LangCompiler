@@ -1,83 +1,64 @@
+
+
 extern _print
-global _epic
+global _mains
+extern _error
+extern _input
+
+extern _reprListReal
+extern _initList
+extern _appendList
+extern _freeList
+extern _deepfreeList
+
+extern _mem_alloc
 section .text
+leaveret:
+leave
+ret
 
 
 
-
-
-
-_epic:
-        push esp
-        mov ebp,esp
-        sub esp,28
-        ;greatest
-        mov eax,99999
-
-
-        mov edx,ebp
-        add edx,20
-
-        mov edi,0
-        
-        mov ecx,ebp
-        add ecx,8
-        
-        outer:
-                ;t greatest
-                mov ebx,-1
-                inner:
-
-                        cmp DWORD[ecx],ebx
-                         jle done
-                        cmp DWORD[ecx],eax 
-                        jge done
-                        nop
-                        nop
-                        nop
-                        add eax,10000
-                        analyse:
-                        nop
-                        nop
-                        sub eax,10000
-                        mov ebx,DWORD[ecx]
-                                
-                        done:
-
-                        
-                add ecx,4
-                cmp ecx,edx
-                jle inner
- 
-
-                mov DWORD[ebp-4], eax
-                mov DWORD[ebp-8], ecx
-                mov DWORD[ebp-12], edi
-                mov DWORD[ebp-16], esi
-                mov DWORD[ebp-20], ebx
-                mov DWORD[ebp-24], edx
-
-                push ebx
-                call _print
-                add esp, 4
-
-                mov  eax ,DWORD[ebp-4]
-                mov  ecx ,DWORD[ebp-8]
-                mov edi, DWORD[ebp-12]
-                mov esi,DWORD[ebp-16]
-                mov ebx,DWORD[ebp-20]
-                mov edx,DWORD[ebp-24]
-                
-        
-                mov eax,ebx
-                
-
-        add edi,1
-        cmp edi,4
-        jl outer
-
-        leave
-        ret
-
-
-
+faJakeaJake2340167373680:
+push ebp
+mov ebp, esp
+sub esp, 8
+mov DWORD[ebp-8], 0
+mov DWORD[ebp-4], 5
+mov eax, DWORD[ebp-8]
+cmp eax, 0
+je b0
+push DWORD[ebp-8]
+call _error
+add esp, 4
+b0:
+mov eax, DWORD[ebp-4]
+jmp leaveret
+leave 
+ret 
+_mains:
+push ebp
+mov ebp, esp
+sub esp, 16
+mov DWORD[ebp-4], 0
+mov DWORD[ebp-8], -1
+mov eax, DWORD[ebp-8]
+cmp eax, 5
+je b2
+push DWORD[ebp-8]
+call _error
+add esp, 4
+b2:
+mov DWORD[ebp-16], 0
+mov DWORD[ebp-12], 1
+mov eax, DWORD[ebp-16]
+cmp eax, 0
+je b3
+push DWORD[ebp-16]
+call _error
+add esp, 4
+b3:
+mov eax, DWORD[ebp-12]
+jmp leaveret
+leave 
+ret 
