@@ -1,0 +1,13 @@
+class Jake{
+
+     int a = 5
+     int Jake(){
+        return 5
+    }
+}
+int main(){
+    Jake a = null
+    a.hi
+
+    return 1
+}
