@@ -19,12 +19,12 @@ ret
 
 
 
-faJakeaJake2340167373680:
+faJakeaJake1839845071360:
 push ebp
 mov ebp, esp
 sub esp, 8
 mov DWORD[ebp-8], 0
-mov DWORD[ebp-4], 5
+mov DWORD[ebp-4], 100
 mov eax, DWORD[ebp-8]
 cmp eax, 0
 je b0
@@ -33,32 +33,55 @@ call _error
 add esp, 4
 b0:
 mov eax, DWORD[ebp-4]
-jmp leaveret
+push eax
+call _print
+add esp, 4
 leave 
 ret 
 _mains:
 push ebp
 mov ebp, esp
-sub esp, 16
-mov DWORD[ebp-4], 0
-mov DWORD[ebp-8], -1
+sub esp, 24
+mov DWORD[ebp-8], 5
+push 4
+call _mem_alloc
+add esp, 4
+mov DWORD[ebp-4], eax
+push eax
+call faJakeaJake1839845071360
+add esp, 4
 mov eax, DWORD[ebp-8]
 cmp eax, 5
-je b2
+je b1
 push DWORD[ebp-8]
 call _error
 add esp, 4
-b2:
+b1:
 mov DWORD[ebp-16], 0
-mov DWORD[ebp-12], 1
-mov eax, DWORD[ebp-16]
+gdbtime:
+mov eax, DWORD[ebp-4]
+mov eax, DWORD[eax+4]
+gdblime:
+
+
+push eax
+call _print
+add esp, 4
+
+
+
+mov DWORD[ebp-24], 0
+mov DWORD[ebp-20], 200
+mov eax, DWORD[ebp-24]
 cmp eax, 0
 je b3
-push DWORD[ebp-16]
+push DWORD[ebp-24]
 call _error
 add esp, 4
 b3:
-mov eax, DWORD[ebp-12]
-jmp leaveret
+mov eax, DWORD[ebp-20]
+push eax
+call _print
+add esp, 4
 leave 
 ret 

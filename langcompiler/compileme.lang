@@ -1,13 +1,12 @@
 class Jake{
-
-     int a = 5
-     int Jake(){
-        return 5
+    int rowen = 5
+    void Jake(){
+        print(100)
     }
 }
 int main(){
-    Jake a = null
-    a.hi
 
-    return 1
+    Jake j = Jake()
+    print(j.rowen)
+    print(200)
 }

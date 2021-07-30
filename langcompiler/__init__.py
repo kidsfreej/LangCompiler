@@ -2,7 +2,6 @@ from  langcompiler.lexer import Lexer
 from langcompiler.parser import Parser
 from langcompiler.syntaxtree import BinaryOp, UnaryOp, Integer, Assignment, Variable, Boolean, If, While, For, Function, \
     Call, Return, List, Class, Property
-import pyperclip
 
 class Instruction:
     def __init__(self):
@@ -108,7 +107,7 @@ class Scope:
         next = self
         while variable not in next.variables:
 
-            if next.parent == None:
+            if next.parent==None:
                 return False
             next = self.parent
         v_keys = list(next.variables.keys())
@@ -151,7 +150,7 @@ class AsmFunction:
     def __repr__(self):
         return f"<AsmFunction {self.name} {self.scope}>"
     def __hash__(self):
-        return hash(self.name)
+        return hash(hash(type(self))+hash(self.name))
     def __eq__(self, other):
         return hash(self)==hash(other)
 class AsmParams:
@@ -167,7 +166,7 @@ class AsmParams:
     def __eq__(self, other):
         return hash(self)==hash(other)
 class AsmClass:
-    def __init__(self,name,scope=None,code=None,variables={},variable_types={},functions=[],assignments=[],definitions=[]):
+    def __init__(self,name,scope=None,code=None,variables={},variable_types={},functions=[],assignments=[],definitions=[],size=0):
         self.name = name
         self.scope = scope
         self.variable_types = variable_types
@@ -176,10 +175,11 @@ class AsmClass:
         self.functions = functions
         self.definitions = definitions
         self.assignments = assignments
+        self.size = size
     def __repr__(self):
         return f"<AsmClass {self.name}>"
     def __hash__(self):
-        return hash(self.name)
+        return hash(hash(type(self))+hash(self.name))
     def __eq__(self, other):
         return hash(self)==hash(other)
 class Leave(Instruction):
@@ -222,16 +222,12 @@ class Compiler:
         return self.type_sizes[t]
     def rename_variable(self,v,nv,scope):
         new_v = Variable(nv,v.scope)
-
         t_p = self.get_type_variable(v,v.scope)
         t_c = self.create_fake_type_variable(new_v,v.scope)
         v.scope.variables[new_v] = v.scope.variables.pop(v)
-
-        # HERE FIX THIS BUG BUG
-
         v.scope.variables[t_c] = v.scope.variables.pop(t_p)
-
         v.value = nv
+        return new_v
     def create_fake_type_variable(self,ogv,scope):
         return Variable(ogv,scope)
     def class_func_to_name(self,class_name,func_name):
@@ -319,9 +315,14 @@ class Compiler:
         self.label_counter+=1
         return Label("b"+str(self.label_counter - 1))
     def visit_property(self, node, scope, code):
-        asm_class = scope.find(AsmClass(node.left.value))
-        t_var = self.create_temporary_variable(scope,code,asm_class.variable_types[node.right])
-        code.append(Mov())
+        v = scope.find(Variable(node.left.value))
+        asm_class = scope.find(AsmClass(v.otype))
+        t_var = self.create_temporary_variable(scope,code,self.get_type(asm_class.variable_types[node.right],scope))
+        code.append(Mov("eax",v))
+        code.append(Mov("eax",f"DWORD[eax+{asm_class.variables[node.right]}]"))
+        code.append(Mov(t_var,"eax"))
+        return t_var
+
     def visit_return(self,node,scope,code,func):
         if func==None:
             0/0
@@ -339,13 +340,18 @@ class Compiler:
         else:
             if node.data != None:
                 print("error: expected no return value")
-    def visit_assignment(self,node,scope,code):
+    def visit_assignment(self,node,scope,code,asmnode=None):
         variable = self.visit_expr(node.right, scope, code)
+        if asmnode != None:
+            self.verify_type_one_variable(variable, self.get_type(node.vtype, scope), scope, code)
+            code.append(Mov("eax",variable))
+            code.append(Mov(f"{asmnode.variables[node]}"))
         # If class
         if node.vtype !=None:
 
             self.verify_type_one_variable(variable, self.get_type(node.vtype, scope), scope,code)
-            self.rename_variable(variable, node.left.value, scope)
+            t_var = self.rename_variable(variable, node.left.value, scope)
+            t_var.otype = node.vtype
         else:
             self.check_variable(node.left, scope)
             self.verify_type_two_variables(node.left,variable, scope,code)
@@ -447,7 +453,7 @@ class Compiler:
         return r
     def visit_expr(self,node, scope,code):
         if type(node)==Property:
-            self.visit_property(node,scope,code)
+            return self.visit_property(node,scope,code)
         if type(node)==Variable:
             if node.value=="null":
                 t_var = self.create_temporary_variable(scope, code)
@@ -496,14 +502,16 @@ class Compiler:
 
     def visit_class(self,node,classnode,scope,code):
         pass
-    def visit_define(self,node,asmnode,scope,code):
+    def visit_define(self,node,asmnode,scope,code,asses=[]):
+
+        for ass in asses:
+            self.visit_assignment(ass,scope,code,asmnode)
 
         i = 0
         for param in asmnode.params.param_pairs:
             t_var = self.assign_parameter_space(param[1],scope,i)
             self.verify_type_one_variable(t_var,self.get_type(param[0],scope),scope,code)
             i+=1
-
 
         self.visit_block(node.block,scope,code,asmnode)
         code.insert(0, Sub("esp",scope.local_variable_mem_counter-4))
@@ -513,7 +521,7 @@ class Compiler:
         if asmnode.name == "main":
             code.insert(0, Label("_mains"))
         else:
-            code.insert(0, Label("f"+asmnode.name+str(id(scope))))
+            code.insert(0, self.asm_function_to_label(asmnode,scope))
         code.append(Leave())
         code.append(Ret())
     def visit_block(self,node,scope,code,func=None):
@@ -522,6 +530,18 @@ class Compiler:
             if a ==True:
                 return a
     def visit_call(self,node, scope,code):
+        asm_class = scope.check_and_retrieve(AsmClass(node.callee.value))
+        if node.caller ==None and asm_class !=False:
+            t_var = self.create_temporary_variable(scope,code,self.get_type(asm_class.name,scope))
+            func = asm_class.scope.find(AsmFunction(self.class_func_to_name(asm_class.name,node.callee.value)))
+            code.append(Push(asm_class.size))
+            code.append(CallInst("_mem_alloc"))
+            code.append(Add("esp",4))
+            code.append(Mov(t_var,"eax"))
+            code.append(Push("eax"))
+            code.append(CallInst(self.asm_function_to_label(func,asm_class.scope)))
+            code.append(Add("esp",4))
+            return t_var
         if node.callee == Variable("print"):
             t_var = self.visit_expr(node.args[0], scope, code)
             self.verify_type_one_variable(t_var,self.get_type("int",scope), scope,code)
@@ -600,11 +620,17 @@ class Compiler:
                 for line in node.block.children:
                     if type(line) == Function:
                         asm_func = asm_class.scope.find(AsmFunction(self.class_func_to_name(asm_class.name,line.name)))
-
                         # is constructor
-                        if asm_func.name==asm_class.name:
+                        if line.name==asm_class.name:
+                            i = 0
                             for ass in asm_class.assignments:
-                                self.visit_assignment(ass, asm_class.scope, asm_func.code)
+
+                                asm_class.variable_types[ass.left] = ass.vtype
+                                asm_class.variables[ass.left]= 4
+                                i+=4
+                            asm_class.size = i
+                            self.visit_define(line,asm_func,asm_class.scope,asm_func.code,asm_class.assignments)
+                            rcode += asm_func.code
                         else:
                             self.visit_define(line, asm_func, asm_func.scope, asm_func.code)
                             rcode += asm_func.code
