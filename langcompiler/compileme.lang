@@ -7,6 +7,6 @@ class Jake{
 int main(){
 
     Jake j = Jake()
+    j.rowen = 100
     print(j.rowen)
-    print(200)
 }

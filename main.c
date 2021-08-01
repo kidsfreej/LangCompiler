@@ -75,8 +75,8 @@ DataSize* reprListReal( List* l){
    int commaCount = 0;
    for(int i =0;i<l->length;i++){
       if(l->types[i]==3){
-         DataSize* a = reprListReal(l->values[i]);
-         appendList(&tempL,a,3);
+         DataSize* a = reprListReal((List*)l->values[i]);
+         appendList(&tempL,(int)a,3);
          size+=a->size;
          commaCount++;
       }else{
@@ -88,7 +88,7 @@ DataSize* reprListReal( List* l){
          DataSize* d = malloc(sizeof(DataSize));
          d->size = nsize;
          d->data = t;
-         appendList(&tempL, d,3);
+         appendList(&tempL,(int)d,3);
          size+=nsize;
          commaCount++;
       }
