@@ -340,12 +340,13 @@ class Compiler:
         else:
             if node.data != None:
                 print("error: expected no return value")
-    def visit_assignment(self,node,scope,code,asmnode=None):
+    def visit_assignment(self,node,scope,code,asmnode=None,asmclass=None):
         variable = self.visit_expr(node.right, scope, code)
         if asmnode != None:
             self.verify_type_one_variable(variable, self.get_type(node.vtype, scope), scope, code)
             code.append(Mov("eax",variable))
-            code.append(Mov(f"{asmnode.variables[node]}"))
+            code.append(Mov("ecx",f"DWORD[ebp+{8}]"))
+            code.append(Mov(f"DWORD[ecx+{asmclass.variables[node.left]}]","eax"))
         # If class
         if node.vtype !=None:
 
@@ -502,10 +503,10 @@ class Compiler:
 
     def visit_class(self,node,classnode,scope,code):
         pass
-    def visit_define(self,node,asmnode,scope,code,asses=[]):
+    def visit_define(self,node,asmnode,scope,code,asses=[],asmclass=None):
 
         for ass in asses:
-            self.visit_assignment(ass,scope,code,asmnode)
+            self.visit_assignment(ass,scope,code,asmnode,asmclass)
 
         i = 0
         for param in asmnode.params.param_pairs:
@@ -629,7 +630,7 @@ class Compiler:
                                 asm_class.variables[ass.left]= 4
                                 i+=4
                             asm_class.size = i
-                            self.visit_define(line,asm_func,asm_class.scope,asm_func.code,asm_class.assignments)
+                            self.visit_define(line,asm_func,asm_class.scope,asm_func.code,asm_class.assignments,asm_class)
                             rcode += asm_func.code
                         else:
                             self.visit_define(line, asm_func, asm_func.scope, asm_func.code)
