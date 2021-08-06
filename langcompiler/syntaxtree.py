@@ -39,7 +39,6 @@ class Variable(Constant):
     def __init__(self,value,scope=None):
         self.scope = scope
         self.value = value
-        self.otype = -1
     def __repr__(self):
         return f"<Variable ({self.value})>"
 

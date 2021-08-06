@@ -1,12 +1,27 @@
 class Jake{
-    int rowen = 5
+    John john =null
     void Jake(){
-        print(100)
     }
 }
-int main(){
+class John{
+    int b = 50
+    int c = 51
+    void John(){
 
-    Jake j = Jake()
-    j.rowen = 100
-    print(j.rowen)
+    }
+
+}
+class A{
+    int a = 100
+    void A(){
+    }
+    void aify(int b){
+       this.a = b
+    }
+}
+void m(int a){
+    print(a)
+}
+int main(){
+    a.m(10, 100)
 }

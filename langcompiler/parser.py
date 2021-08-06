@@ -316,6 +316,11 @@ class Parser:
                 node = self.trailer(node)
             else:
                 node = self.method_call(node)
+        if self.cur_type == Token.EQUALS:
+            if type(node)==Call:
+                raise Exception("Bruh: Can't assign function call")
+            self.consume(Token.EQUALS)
+            node = Assignment(node,self.expr())
         if node==None:
             raise Exception(f"Unexpected: {self.cur_value} on line {self.cur_token.line}")
         return node
